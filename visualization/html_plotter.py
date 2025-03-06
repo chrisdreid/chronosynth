@@ -118,6 +118,23 @@ class HTMLPlotter:
         Returns:
             HTML content
         """
+        # Read the JS libraries and embed them directly
+        import os
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        base_dir = os.path.dirname(script_dir)
+        
+        # Load the JS libraries
+        try:
+            with open(os.path.join(base_dir, "lib", "pickletojson.js"), "r") as f:
+                pickle_js = f.read()
+            
+            with open(os.path.join(base_dir, "lib", "numjs.min.js"), "r") as f:
+                numjs_js = f.read()
+        except Exception as e:
+            print(f"Warning: Could not load JS libraries: {e}")
+            pickle_js = ""
+            numjs_js = ""
+        
         # Basic HTML template with embedded JavaScript for loading and displaying time series data
         html_content = f"""<!DOCTYPE html>
 <html>
@@ -127,28 +144,13 @@ class HTMLPlotter:
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dayjs@1.10.4/dayjs.min.js"></script>
-    <!-- Import pickleparser for .pkl files -->
-    <script src="lib/pickletojson.js"></script>
-    <!-- Import npyjs for .npy files -->
-    <script src="lib/numjs.min.js"></script>
-    <!-- Fallback to CDN if local files not found -->
+    <!-- Embedded pickleparser for .pkl files -->
     <script>
-        window.onerror = function(message, source, lineno, colno, error) {{
-            if (message.includes('pickletojson.js') || message.includes('numjs.min.js')) {{
-                // Create script elements for CDN versions if local files fail to load
-                const pickleScript = document.createElement('script');
-                pickleScript.src = 'https://cdn.jsdelivr.net/gh/dmishin/jsdata/dist/jsdata.min.js';
-                document.head.appendChild(pickleScript);
-                
-                const numjsScript = document.createElement('script');
-                numjsScript.src = 'https://cdn.jsdelivr.net/npm/numjs@0.16.1/dist/numjs.min.js';
-                document.head.appendChild(numjsScript);
-                
-                console.log('Fallback to CDN libraries for binary file support');
-                return true; // Prevent default error handling
-            }}
-            return false; // Let other errors propagate
-        }};
+    {pickle_js}
+    </script>
+    <!-- Embedded numjs for .npy files -->
+    <script>
+    {numjs_js}
     </script>
     <style>
         body {{
@@ -467,17 +469,72 @@ class HTMLPlotter:
             const filepath = urlParams.get('filepath');
             if (filepath) {{
                 log(`Loading file from URL: ${{filepath}}`);
-                fetchFileFromUrl(filepath);
+                
+                // Handle both absolute and relative paths
+                // If path starts with file:// or /, treat as absolute path (which may fail with CORS)
+                // Otherwise, treat as relative path from the current page
+                let url = filepath;
+                if (!url.startsWith('file://') && !url.startsWith('http://') && !url.startsWith('https://')) {{
+                    // If it's a relative path, make it relative to the current page
+                    // This avoids CORS issues when running locally
+                    if (url.startsWith('/')) {{
+                        url = url.substring(1); // Remove leading slash
+                    }}
+                    
+                    // Get the current directory path from the current URL
+                    const currentPath = window.location.pathname;
+                    const currentDir = currentPath.substring(0, currentPath.lastIndexOf('/') + 1);
+                    
+                    // Combine with the current directory path
+                    url = window.location.origin + currentDir + url;
+                    log(`Resolved to relative URL: ${{url}}`);
+                }}
+                
+                fetchFileFromUrl(url);
             }}
         }}
         
         function fetchFileFromUrl(url) {{
-            fetch(url)
+            // For local files, add cache-busting query parameter to avoid caching issues
+            const fetchUrl = url.startsWith('http') ? url : url + '?_=' + new Date().getTime();
+            
+            fetch(fetchUrl)
                 .then(response => {{
                     if (!response.ok) throw new Error(`Network response was not ok: ${{response.status}}`);
-                    return response.text();
+                    // Check content type
+                    const contentType = response.headers.get('content-type');
+                    if (contentType && contentType.includes('application/json')) {{
+                        return response.text();
+                    }} else if (url.endsWith('.pkl') || url.endsWith('.npy')) {{
+                        // For binary files
+                        return response.arrayBuffer();
+                    }} else {{
+                        // Default to text
+                        return response.text();
+                    }}
                 }})
-                .then(text => processJsonContent(text, url.split('/').pop()))
+                .then(content => {{
+                    const filename = url.split('/').pop().split('?')[0]; // Remove query params
+                    
+                    if (typeof content === 'string') {{
+                        try {{
+                            // Try to parse as JSON
+                            processJsonContent(content, filename);
+                        }} catch (e) {{
+                            log(`Error processing content as JSON: ${{e.message}}`);
+                        }}
+                    }} else if (content instanceof ArrayBuffer) {{
+                        // Process as binary file
+                        const extension = filename.split('.').pop().toLowerCase();
+                        if (extension === 'pkl') {{
+                            loadPklFile(filename, content);
+                        }} else if (extension === 'npy') {{
+                            loadNpyFile(filename, content);
+                        }} else {{
+                            log(`Unsupported binary file extension: ${{extension}}`);
+                        }}
+                    }}
+                }})
                 .catch(error => log(`Error fetching file: ${{error.message}}`));
         }}
         

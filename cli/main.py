@@ -78,6 +78,8 @@ def parse_arguments(args=None):
     # Special commands
     parser.add_argument("--generate-viewer", action="store_true", help="Generate a standalone viewer HTML file")
     parser.add_argument("--viewer-file", type=str, default="timeseries_viewer.html", help="Output path for viewer HTML file")
+    parser.add_argument("--create-viewer-package", type=str, metavar="DIR", help="Create a complete viewer package with sample data in the specified directory")
+    parser.add_argument("--no-sample-data", action="store_true", help="Don't include sample data in the viewer package")
     
     if not args:
         args = sys.argv[1:]
@@ -203,6 +205,16 @@ def main(args=None):
     # Handle special commands
     if options.generate_viewer:
         HTMLPlotter.generate_viewer(options.viewer_file)
+        sys.exit(0)
+    
+    if options.create_viewer_package:
+        # Import the package creation function
+        try:
+            from ..create_viewer_package import create_viewer_package
+        except ImportError:
+            from chronosynth.create_viewer_package import create_viewer_package
+        
+        create_viewer_package(options.create_viewer_package, not options.no_sample_data)
         sys.exit(0)
     
     # Create generator with global config

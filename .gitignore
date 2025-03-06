@@ -5,6 +5,9 @@ __pycache__/
 
 # claude code
 CLAUDE.md
+examples/output
+examples/outputs
+outputs/
 # C extensions
 *.so
 
