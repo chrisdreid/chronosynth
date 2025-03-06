@@ -60,7 +60,7 @@ def parse_arguments(args=None):
     parser.add_argument("--normalize", action="store_true", help="Normalize all values to 0-1 range in output")
     
     # Output options
-    parser.add_argument("--output-dir", type=str, default="output", help="Output directory")
+    parser.add_argument("--output-dir", type=str, default="outputs", help="Output directory")
     parser.add_argument("--output-file", type=str, help="Output file name")
     parser.add_argument("--format", type=str, choices=["raw", "structured"], default="structured", help="Output data format")
     parser.add_argument("--output-format", type=str, choices=["json", "pkl", "npy", "auto"], default="auto", 

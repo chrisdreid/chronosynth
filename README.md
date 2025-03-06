@@ -119,9 +119,33 @@ pip install chronosynth[safe_eval]      # Asteval (for safe evaluation of expres
 
 The keyframe system is the core feature for defining time series behavior. Keyframes allow you to specify exact values at specific points in time, with automatic interpolation between points. 
 
-ChronoSynth now supports two different keyframe syntax formats that can be mixed freely:
-1. **Classic Format**: `field@time` (e.g., `c80@30s`) - Field-based organization
-2. **At-Sign Format**: `@time;field1value;field2value` (e.g., `@30s;c80;g50`) - Time-based organization
+ChronoSynth supports two different keyframe syntax formats that can be mixed freely:
+1. **At-Sign Format** (Recommended): `@time;field1value;field2value` (e.g., `@30s;c80;g50`) - Time-based organization
+2. **Classic Format**: `field@time` (e.g., `c80@30s`) - Field-based organization
+
+### At-Sign Format Examples (Recommended)
+
+```python
+keyframes = [
+    # Simple values
+    "@0s;c20;g10;m8",           # At 0s: CPU=20, GPU=10, Memory=8
+    "@60s;c80;g60",             # At 60s: CPU=80, GPU=60
+    
+    # Transition types 
+    "@120s;c90~",               # At 120s: CPU=90 with smooth transition
+    "@180s;g70|",               # At 180s: GPU=70 with step transition
+    
+    # Advanced patterns
+    "@240s;c50^75,55:5s",       # CPU=50, spike to 75, return to 55 over 5s
+    "@300s;g60^10^+10",         # GPU=60, pulse to +10, return to +10
+    
+    # Duration and hold specifications
+    "@360s;c70:10s_5s",         # CPU=70 over 10s duration, hold 5s
+    "@420s;g50^75,55:5s_2s;c~-40:3s_2s",  # Complex multi-field keyframe:
+                                # - GPU=50, spike to 75, return to 55 over 5s, hold 2s
+                                # - CPU smooth decrease by 40 over 3s, hold 2s
+]
+```
 
 ### Classic Format Examples
 
@@ -149,46 +173,22 @@ keyframes = [
 ]
 ```
 
-### At-Sign Format Examples
-
-```python
-keyframes = [
-    # Simple values
-    "@0s;c20;g10;m8",           # At 0s: CPU=20, GPU=10, Memory=8
-    "@60s;c80;g60",             # At 60s: CPU=80, GPU=60
-    
-    # Transition types 
-    "@120s;c90~",               # At 120s: CPU=90 with smooth transition
-    "@180s;g70|",               # At 180s: GPU=70 with step transition
-    
-    # Advanced patterns
-    "@240s;c50^75,55:5s",       # CPU=50, spike to 75, return to 55 over 5s
-    "@300s;g60^10^+10",         # GPU=60, pulse to +10, return to +10
-    
-    # Duration and hold specifications
-    "@360s;c70:10s_5s",         # CPU=70 over 10s duration, hold 5s
-    "@420s;g50^75,55:5s_2s;c~-40:3s_2s",  # Complex multi-field keyframe:
-                                # - GPU=50, spike to 75, return to 55 over 5s, hold 2s
-                                # - CPU smooth decrease by 40 over 3s, hold 2s
-]
-```
-
 ### Mixing Both Formats
 
 ```python
 keyframes = [
-    # Initial setup with classic format
-    "c20@0s", "g10@0s", "m8@0s",
-    "c~", "g~",                 # Set default transitions to smooth
+    # Set default transitions to smooth
+    "c~", "g~",                 
     
-    # Time-based events with @-format 
+    # Initial values with at-sign format
+    "@0s;c20;g10;m8",           # At 0s: CPU=20, GPU=10, Memory=8
+    
+    # Time-based events (recommended approach)
     "@30s;c60^",                # CPU spike to 60% at 30s
     "@60s;g70;m20",             # GPU=70, Memory=20 at 60s
+    "@90s;c80~",                # CPU smooth to 80% at 90s
     
-    # Continue with classic format for field-specific events
-    "c80@90s~",                 # CPU smooth to 80% at 90s
-    
-    # Complex patterns with @-format
+    # Complex multi-field patterns
     "@120s;c50^75,55:5s_2s;g80|", # At 120s:
                                 # - CPU=50, spike to 75, return to 55 over 5s, hold 2s
                                 # - GPU step to 80
@@ -343,17 +343,17 @@ chronosynth
 # Generate 60 minutes of data with 10-second intervals
 chronosynth --minutes 60 --interval-seconds 10
 
-# Apply custom keyframes (Classic format)
-chronosynth --keyframe "g80@30s" "c+20@1m~" "r50@end(sin)"
-
-# Apply custom keyframes (At-Sign format)
+# Apply custom keyframes with At-Sign format (Recommended)
 chronosynth --keyframe "@30s;g80;c60" "@1m;r70~" "@2m;g50^75,55:5s"
 
+# Apply custom keyframes with Classic format
+chronosynth --keyframe "g80@30s" "c+20@1m~" "r50@end(sin)"
+
 # Mix both formats freely
-chronosynth --keyframe "g~" "c~" "@0s;g10;c20" "g80@30s" "@1m;c70^;r30"
+chronosynth --keyframe "g~" "c~" "@0s;g10;c20" "@30s;g80" "@1m;c70^;r30"
 
 # Normalize values (interpret as fractions of min/max range)
-chronosynth --normalize --keyframe "g0.8@30s" "c0.5@1m"
+chronosynth --normalize --keyframe "@30s;g0.8;c0.5" "@1m;r0.7"
 
 # Apply a sine wave mask across the entire timeline
 chronosynth --mask "sin(amp=0.3,freq=0.01,offset=1.0)"
@@ -388,7 +388,7 @@ chronosynth --output-file data.npy   # NumPy (if numpy is installed)
 ### Python API
 
 ```python
-from timeseries_generator import TimeSeriesGenerator
+from chronosynth import TimeSeriesGenerator
 
 # Create generator
 generator = TimeSeriesGenerator()
@@ -418,19 +418,23 @@ generator.configure_fields({
     }
 })
 
-# Generate data using mixed keyframe formats
+# Generate data with At-Sign keyframe format (Recommended)
 data = generator.generate(
     minutes=30,
     interval_seconds=5,
     keyframes=[
-        # Classic format
-        "c20@0s", "m10@0s", "g5@0s",
-        "c~", "g~",  # Set default transitions to smooth
-        "c60@5m", "m20@10m~", 
-        # At-Sign format
-        "@15m;g80;c70^", "@20m;m25|", 
-        # Advanced patterns with both formats
-        "@25m;g50^75,55:5s", "c80@end"
+        # Set default transitions to smooth
+        "c~", "g~",
+        # Initial values with at-sign format
+        "@0s;c20;m10;g5",
+        # Time-based events with multiple fields
+        "@5m;c60",
+        "@10m;m20~", 
+        "@15m;g80;c70^",
+        "@20m;m25|", 
+        # Advanced patterns
+        "@25m;g50^75,55:5s",
+        "@end;c80"
     ],
     normalize=True
 )
@@ -1046,16 +1050,16 @@ chronosynth --start-time "2025-01-01 00:00:00" --keyframe "c20@10s" "c80@30s" --
 # Generate a realistic server workload pattern
 chronosynth --minutes 5 --interval-seconds 1 --keyframe \
 "c~" "g~" "m~" \
-"c20@0s" "g10@0s" "m5000@0s" \
-"c85@30s" "g50@40s" "m12000@45s" \
-"c60@60s" "g30@70s" "m10000@65s" \
-"g95@90s^" "c70@95s" \
-"m18000@120s" \
-"c90@150s" "g80@155s" "m25000@160s" \
-"c40@180s" "g30@175s" "m22000@185s" \
-"c95@210s" "g90@215s" "m28000@220s" \
-"c30@250s" "g20@245s" "m15000@260s" \
-"c20@290s" "g10@290s" "m5000@295s" \
+"@0s;c20;g10;m5000" \
+"@30s;c85" "@40s;g50" "@45s;m12000" \
+"@60s;c60" "@70s;g30" "@65s;m10000" \
+"@90s;g95^" "@95s;c70" \
+"@120s;m18000" \
+"@150s;c90" "@155s;g80" "@160s;m25000" \
+"@180s;c40" "@175s;g30" "@185s;m22000" \
+"@210s;c95" "@215s;g90" "@220s;m28000" \
+"@250s;c30" "@245s;g20" "@260s;m15000" \
+"@290s;c20;g10" "@295s;m5000" \
 --output-file workload.json --plot html:open
 ```
 

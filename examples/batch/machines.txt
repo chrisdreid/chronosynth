@@ -1,0 +1,11 @@
+# Example batch configuration file
+# Each line configures one dataset with parameters
+
+# Server 1 - high CPU usage
+--output-file server1.json --keyframe "@0s;c20;g10;m5000" "@10m;c85;g40" "@20m;c60" "@30m;c90^" "@40m;c40" "@50m;c70" "@60m;c30"
+
+# Server 2 - high GPU usage
+--output-file server2.json --keyframe "@0s;c10;g20;m4000" "@10m;c30;g85" "@20m;g60" "@30m;g95^" "@40m;g40" "@50m;g80" "@60m;g20"
+
+# Server 3 - high memory usage
+--output-file server3.json --keyframe "@0s;c15;g15;m6000" "@10m;c40;g30;m18000" "@20m;m12000" "@30m;m28000^" "@40m;m16000" "@50m;m22000" "@60m;m8000"
