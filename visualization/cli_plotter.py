@@ -1,4 +1,4 @@
-"""CLI-based plotting for TimeSeriesGenerator."""
+"""CLI-based plotting for ChronoSynth."""
 
 import os
 from typing import Dict, List, Any, Optional, Tuple

@@ -1,4 +1,4 @@
-"""Main generator class for TimeSeriesGenerator."""
+"""Main generator class for ChronoSynth."""
 
 import json
 import pickle

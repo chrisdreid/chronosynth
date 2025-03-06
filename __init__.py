@@ -1,5 +1,5 @@
 """
-TimeSeriesGenerator - A powerful, flexible library for generating synthetic time series data
+ChronoSynth - A powerful, flexible library for generating synthetic time series data
 with advanced configuration options, intuitive keyframe controls, and multiple output formats.
 
 Core functionality works with no dependencies, with optional enhanced capabilities when 

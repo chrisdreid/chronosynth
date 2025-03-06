@@ -1,4 +1,4 @@
-"""Structured timeslots format handler for TimeSeriesGenerator."""
+"""Structured timeslots format handler for ChronoSynth."""
 
 import json
 import pickle

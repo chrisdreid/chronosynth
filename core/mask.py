@@ -1,4 +1,4 @@
-"""Timeline masks for TimeSeriesGenerator."""
+"""Timeline masks for ChronoSynth."""
 
 import math
 import re

@@ -1,1 +1,1 @@
-"""Command-line interface for TimeSeriesGenerator."""
+"""Command-line interface for ChronoSynth."""

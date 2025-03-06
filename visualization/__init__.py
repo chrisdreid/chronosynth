@@ -1,1 +1,1 @@
-"""Visualization tools for TimeSeriesGenerator."""
+"""Visualization tools for ChronoSynth."""

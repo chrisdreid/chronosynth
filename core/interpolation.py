@@ -1,4 +1,4 @@
-"""Interpolation methods for TimeSeriesGenerator."""
+"""Interpolation methods for ChronoSynth."""
 
 import math
 from typing import List, Dict, Any, Optional

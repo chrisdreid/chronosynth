@@ -1,4 +1,4 @@
-"""Resampling algorithms for TimeSeriesGenerator."""
+"""Resampling algorithms for ChronoSynth."""
 
 from typing import List, Tuple, Optional
 import math

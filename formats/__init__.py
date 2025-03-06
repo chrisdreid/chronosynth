@@ -1,1 +1,1 @@
-"""Output format handlers for TimeSeriesGenerator."""
+"""Output format handlers for ChronoSynth."""

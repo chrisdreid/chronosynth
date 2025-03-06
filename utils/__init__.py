@@ -1,1 +1,1 @@
-"""Utility functions for TimeSeriesGenerator."""
+"""Utility functions for ChronoSynth."""

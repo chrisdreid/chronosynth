@@ -1,4 +1,4 @@
-"""Command-line interface for TimeSeriesGenerator."""
+"""Command-line interface for ChronoSynth."""
 
 import argparse
 import os
@@ -34,9 +34,9 @@ try:
     from ..visualization.html_plotter import HTMLPlotter
 except ImportError:
     # Support for direct script execution
-    from timeseries_generator.core.generator import TimeSeriesGenerator
-    from timeseries_generator.visualization.cli_plotter import CLIPlotter
-    from timeseries_generator.visualization.html_plotter import HTMLPlotter
+    from chronosynth.core.generator import TimeSeriesGenerator
+    from chronosynth.visualization.cli_plotter import CLIPlotter
+    from chronosynth.visualization.html_plotter import HTMLPlotter
 
 
 def parse_arguments(args=None):
@@ -197,7 +197,7 @@ def handle_plot_request(generator, data: Dict[str, Any], plot_arg: str, title: O
 
 
 def main(args=None):
-    """Command-line interface for TimeSeriesGenerator."""
+    """Command-line interface for ChronoSynth."""
     options = parse_arguments(args)
     
     # Handle special commands

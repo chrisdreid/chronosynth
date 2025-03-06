@@ -1,4 +1,4 @@
-"""Keyframe parsing and processing for TimeSeriesGenerator."""
+"""Keyframe parsing and processing for ChronoSynth."""
 
 import re
 import abc

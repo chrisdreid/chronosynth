@@ -1,1 +1,1 @@
-"""Core functionality for TimeSeriesGenerator."""
+"""Core functionality for ChronoSynth."""

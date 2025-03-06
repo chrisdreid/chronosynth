@@ -1,4 +1,4 @@
-"""Helper functions for TimeSeriesGenerator."""
+"""Helper functions for ChronoSynth."""
 
 import os
 import json

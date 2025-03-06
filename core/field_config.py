@@ -1,4 +1,4 @@
-"""Field configuration management for TimeSeriesGenerator."""
+"""Field configuration management for ChronoSynth."""
 
 import os
 import json

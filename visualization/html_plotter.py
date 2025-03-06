@@ -1,4 +1,4 @@
-"""HTML output for TimeSeriesGenerator."""
+"""HTML output for ChronoSynth."""
 
 import json
 import os

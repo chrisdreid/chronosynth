@@ -1,4 +1,4 @@
-"""Raw timeslots format handler for TimeSeriesGenerator."""
+"""Raw timeslots format handler for ChronoSynth."""
 
 import json
 import pickle
