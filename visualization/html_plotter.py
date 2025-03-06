@@ -125,15 +125,33 @@ class HTMLPlotter:
         
         # Load the JS libraries
         try:
+            # Load libraries that will be embedded directly in the HTML
             with open(os.path.join(base_dir, "lib", "pickletojson.js"), "r") as f:
                 pickle_js = f.read()
             
             with open(os.path.join(base_dir, "lib", "numjs.min.js"), "r") as f:
                 numjs_js = f.read()
+                
+            # Try to load Plotly and DayJS locally if available
+            with open(os.path.join(base_dir, "lib", "plotly.min.js"), "r") as f:
+                plotly_js = f.read()
+                using_local_plotly = True
+                
+            with open(os.path.join(base_dir, "lib", "dayjs.min.js"), "r") as f:
+                dayjs_js = f.read()
+                using_local_dayjs = True
+                
+            print("Using locally downloaded JavaScript libraries")
         except Exception as e:
-            print(f"Warning: Could not load JS libraries: {e}")
-            pickle_js = ""
-            numjs_js = ""
+            print(f"Warning: Could not load all JS libraries locally: {e}")
+            # Ensure required libraries exist even if loading fails
+            if not 'pickle_js' in locals():
+                pickle_js = ""
+            if not 'numjs_js' in locals():
+                numjs_js = ""
+            # Set flags for CDN fallback
+            using_local_plotly = False
+            using_local_dayjs = False
         
         # Basic HTML template with embedded JavaScript for loading and displaying time series data
         html_content = f"""<!DOCTYPE html>
@@ -142,13 +160,55 @@ class HTMLPlotter:
     <title>{title}</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!--
+    =============================================================================
+    ChronoSynth Self-Contained Viewer
+    =============================================================================
+    This HTML file contains embedded JavaScript libraries for offline use in 
+    production and air-gapped environments. For security and reliability, all 
+    necessary libraries are embedded directly in this file.
+    
+    If you need to reduce file size or prefer to load libraries from CDNs:
+    1. Delete the embedded <script> blocks containing the library code
+    2. Uncomment the CDN script tags below
+    
+    Library sources:
+    - Plotly.js: https://plotly.com/javascript/ 
+    - DayJS: https://day.js.org/
+    - pickletojson.js: https://github.com/bfolder/pickleparser
+    - numjs.min.js: https://github.com/nicolaspanel/numjs
+    =============================================================================
+    -->
+    
+    <!-- 
+    Plotly.js - For interactive visualization
+    To use CDN instead of embedded code, uncomment this line:
     <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+    -->
+    {f'<script>{plotly_js}</script>' if 'using_local_plotly' in locals() and using_local_plotly else '<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>'}
+    
+    <!-- 
+    DayJS - For date/time handling
+    To use CDN instead of embedded code, uncomment this line:  
     <script src="https://cdn.jsdelivr.net/npm/dayjs@1.10.4/dayjs.min.js"></script>
-    <!-- Embedded pickleparser for .pkl files -->
+    -->
+    {f'<script>{dayjs_js}</script>' if 'using_local_dayjs' in locals() and using_local_dayjs else '<script src="https://cdn.jsdelivr.net/npm/dayjs@1.10.4/dayjs.min.js"></script>'}
+    
+    <!-- 
+    Pickleparser - For parsing Python pickle (.pkl) files
+    To use CDN instead of embedded code, uncomment this line:
+    <script src="https://cdn.jsdelivr.net/npm/pickleparser@0.2.1/dist/pickletojson.js"></script>
+    -->
     <script>
     {pickle_js}
     </script>
-    <!-- Embedded numjs for .npy files -->
+    
+    <!-- 
+    NumJS - For parsing NumPy (.npy) files and array manipulation
+    To use CDN instead of embedded code, uncomment this line:
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/numjs/0.16.1/numjs.min.js"></script>
+    -->
     <script>
     {numjs_js}
     </script>

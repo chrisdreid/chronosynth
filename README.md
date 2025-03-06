@@ -12,15 +12,16 @@ A powerful, flexible library for generating synthetic time series data. The name
 5. [Basic Usage](#basic-usage)
 6. [Normalization Features](#normalization-features)
 7. [Field Colors and Visualization](#field-colors-and-visualization)
-8. [Timeline Masks](#timeline-masks)
-9. [Data Formats](#data-formats)
-10. [Input File Support](#input-file-support)
-11. [Visualization](#visualization)
-12. [Resampling Algorithms](#resampling-algorithms)
-13. [Enhanced Batch Processing](#enhanced-batch-processing)
-14. [Python API](#python-api)
-15. [Example Usage](#example-usage)
-16. [License](#license)
+8. [Advanced Interpolation Methods](#advanced-interpolation-methods)
+9. [Timeline Masks](#timeline-masks)
+10. [Data Formats](#data-formats)
+11. [Input File Support](#input-file-support)
+12. [Visualization](#visualization)
+13. [Resampling Algorithms](#resampling-algorithms)
+14. [Enhanced Batch Processing](#enhanced-batch-processing)
+15. [Python API](#python-api)
+16. [Example Usage](#example-usage)
+17. [License](#license)
 
 ## Overview
 
@@ -71,9 +72,10 @@ ChronoSynth is designed for creating realistic, customizable time series dataset
 
 - **Visualization Options**:
   - CLI-based plotting
-  - Interactive HTML output with standalone viewer
+  - Interactive HTML output with fully self-contained standalone viewer
   - Export to PNG, SVG, PDF formats
   - ASCII plotting (no dependencies required)
+  - Offline/air-gapped environment support
 
 - **Input File Support**:
   - Load and modify existing time series data
@@ -684,6 +686,50 @@ python examples/color_demo.py --open-browser
 python examples/load_and_plot.py output/timeseries_data.json --open-browser
 ```
 
+## Advanced Interpolation Methods
+
+Besides the basic transition types (linear, smooth, step), ChronoSynth supports more complex interpolation methods for fine-tuned control over how values change between keyframes.
+
+### Available Interpolation Methods
+
+- **Linear**: (default) Steady rate of change
+- **Smooth** (`~`): Gradual acceleration/deceleration using cosine interpolation
+- **Step** (`|`): Immediate change with no transition
+- **Sine** (`sin`): Sinusoidal interpolation with wave-like behavior
+- **Power** (`pow`): Power function interpolation (accelerating or decelerating based on exponent)
+- **Log** (`log`): Logarithmic interpolation (fast at start, slow at end)
+- **Exp** (`exp`): Exponential interpolation (slow at start, fast at end)
+
+### Using Advanced Interpolation
+
+For the basic methods (linear, smooth, step), use the shorthand syntax:
+
+```bash
+c50@10s      # Linear (default)
+c80@20s~     # Smooth transition
+c20@30s|     # Step transition
+```
+
+For advanced methods, use the options syntax:
+
+```bash
+c80@30s(sin)           # Sinusoidal interpolation to 80
+g70@45s(pow=2)         # Power interpolation with exponent 2
+m8000@60s(pow=0.5)     # Square root interpolation (power with exponent 0.5)
+c90@75s(log)           # Logarithmic interpolation to 90
+g95@90s(exp)           # Exponential interpolation to 95
+```
+
+### Combining with Other Options
+
+Advanced interpolation methods can be combined with other options:
+
+```bash
+c80@30s(sin,n=0.5)         # Sinusoidal with noise=0.5
+g70@45s(pow=3,c*0.8)       # Power with exponent 3, also affects CPU
+m16000@60s(log,g*0.5)      # Log interpolation, also sets GPU to 50% of memory
+```
+
 ## Timeline Masks
 
 Apply functions across the entire timeline to simulate patterns:
@@ -810,8 +856,11 @@ chronosynth --generate-viewer --viewer-file viewer.html
 The enhanced HTML viewer now supports field colors, multiple file formats, and interactive features:
 
 ```bash
-# Generate a standalone viewer for viewing multiple datasets
+# Generate a standalone viewer for viewing multiple datasets (includes embedded JS libraries)
 chronosynth --generate-viewer
+
+# Create a completely self-contained viewer package with sample data (for air-gapped environments)
+chronosynth --create-viewer-package my_viewer_package
 
 # Specify custom viewer file path and open it immediately
 chronosynth --generate-viewer --viewer-file custom_viewer.html
@@ -836,6 +885,8 @@ chronosynth --config-file configs/colored_fields.json --output-format npy --outp
 ```
 
 The standalone viewer supports:
+- Fully self-contained operation with all JavaScript libraries embedded
+- Complete offline/air-gapped environment support
 - Loading multiple files simultaneously to compare datasets
 - Field-specific colors preserved from data files
 - Interactive time markers that follow your cursor
@@ -844,6 +895,7 @@ The standalone viewer supports:
 - JSON, PKL, and NPY file format support
 - Single and multi-chart viewing modes
 - Customizable plot appearance
+- Export to PNG and SVG formats
 
 ### Plot Types
 
